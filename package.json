@@ -1,0 +1,77 @@
+{
+  "name": "node-nestjs",
+  "version": "0.0.1",
+  "description": "nestjs demo",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "npm run clean && nest start --watch --webpack",
+    "start:debug": "npm run clean && nest start --debug --watch",
+    "start:prod": "npm run clean && node dist/main",
+    "lint": "eslint --ext .ts .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KyLeoHC/node-nestjs.git"
+  },
+  "keywords": [
+    "node",
+    "nestjs"
+  ],
+  "author": "KyLeo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KyLeoHC/node-nestjs/issues"
+  },
+  "homepage": "https://github.com/KyLeoHC/node-nestjs#readme",
+  "dependencies": {
+    "@nestjs/common": "^6.10.12",
+    "@nestjs/core": "^6.10.12",
+    "@nestjs/platform-express": "^6.10.12",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.0",
+    "rxjs": "^6.5.3"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^6.12.9",
+    "@nestjs/schematics": "^6.7.6",
+    "@nestjs/testing": "^6.10.12",
+    "@types/express": "^4.17.2",
+    "@types/jest": "^24.0.24",
+    "@types/node": "^12.12.21",
+    "@types/supertest": "^2.0.8",
+    "@typescript-eslint/eslint-plugin": "^2.12.0",
+    "@typescript-eslint/parser": "^2.12.0",
+    "eslint": "^6.8.0",
+    "jest": "^24.9.0",
+    "prettier": "^1.19.1",
+    "supertest": "^4.0.2",
+    "ts-jest": "^24.2.0",
+    "ts-loader": "^6.2.1",
+    "ts-node": "^8.5.4",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.7.4"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+}
