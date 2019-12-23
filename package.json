@@ -1,38 +1,26 @@
 {
   "name": "node-nestjs",
   "version": "0.0.1",
-  "description": "nestjs demo",
   "main": "index.js",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "npm run clean && nest start --watch",
     "start:hmr": "npm run start:dev -- --webpack",
     "start:debug": "npm run clean && nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint --ext .ts .",
+    "start:dist": "node dist/main",
+    "build:dev": "nest build",
+    "build:test": "nest build",
+    "build:prev": "nest build",
+    "build:prod": "nest build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "lint": "eslint --ext .ts .",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/KyLeoHC/node-nestjs.git"
-  },
-  "keywords": [
-    "node",
-    "nestjs"
-  ],
-  "author": "KyLeo",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/KyLeoHC/node-nestjs/issues"
-  },
-  "homepage": "https://github.com/KyLeoHC/node-nestjs#readme",
   "dependencies": {
     "@nestjs/common": "^6.10.12",
     "@nestjs/core": "^6.10.12",
@@ -52,7 +40,9 @@
     "@typescript-eslint/eslint-plugin": "^2.12.0",
     "@typescript-eslint/parser": "^2.12.0",
     "eslint": "^6.8.0",
+    "husky": "^3.1.0",
     "jest": "^24.9.0",
+    "lint-staged": "^9.5.0",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",
     "ts-jest": "^24.2.0",
@@ -74,5 +64,16 @@
     },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "{src,test}/**/*.ts": [
+      "npm run lint",
+      "git add"
+    ]
   }
 }
