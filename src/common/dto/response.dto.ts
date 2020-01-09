@@ -6,9 +6,9 @@ export interface ResponseData<T> {
 }
 
 /**
- * response entity for client
+ * response DTO for client
  */
-export class ResponseEntity<T = any> implements ResponseData<T> {
+export class ResponseDto<T = any> implements ResponseData<T> {
   constructor(
     public code: BussinessStatus,
     public message?: string,

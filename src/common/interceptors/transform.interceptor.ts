@@ -8,16 +8,16 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BussinessStatus } from '../enums';
 import {
-  ResponseEntity
-} from '../entities';
+  ResponseDto
+} from '../dto';
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, ResponseEntity<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<T, ResponseDto<T>> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>
-  ): Observable<ResponseEntity<T>> {
+  ): Observable<ResponseDto<T>> {
     // transform result data into our standard style
-    return next.handle().pipe(map(data => (new ResponseEntity(BussinessStatus.OK, undefined, data))));
+    return next.handle().pipe(map(data => (new ResponseDto(BussinessStatus.OK, undefined, data))));
   }
 }

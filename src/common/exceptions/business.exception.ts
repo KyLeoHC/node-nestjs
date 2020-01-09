@@ -4,10 +4,10 @@ import {
   HttpException
 } from '@nestjs/common';
 import { BussinessStatus } from '../enums';
-import { ResponseEntity } from '../entities';
+import { ResponseDto } from '../dto';
 
 export class BusinessException extends HttpException {
   constructor(code: BussinessStatus, message = '', data?: any) {
-    super(new ResponseEntity(code, message, data), HttpStatus.OK);
+    super(new ResponseDto(code, message, data), HttpStatus.OK);
   }
 }
