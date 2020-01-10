@@ -12,7 +12,7 @@ import {
 } from '../dto';
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, ResponseDto<T>> {
+export class TransformResponseInterceptor<T> implements NestInterceptor<T, ResponseDto<T>> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>

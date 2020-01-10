@@ -6,7 +6,7 @@ import {
   UserNotFoundException,
   UserPasswordIncorrectException
 } from 'src/common/exceptions';
-import { comparePassword, hashPasswordSync, hashPassword } from 'src/utils';
+import { comparePassword } from 'src/utils';
 import { User } from 'src/user/entities';
 import { UserService } from 'src/user/user.service';
 import { LoginUserDto } from './dto';

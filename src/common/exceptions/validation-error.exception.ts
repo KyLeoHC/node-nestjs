@@ -4,10 +4,10 @@ import {
 } from '../enums';
 import { BusinessException } from './business.exception';
 
-export class UserNotFoundException extends BusinessException {
+export class ValidationErrorException extends BusinessException {
   constructor(
-    code = BussinessStatus.USER_NOT_FOUND,
-    message = BussinessMessage.USER_NOT_FOUND
+    code = BussinessStatus.USER_PASSEORD_INCORRECT,
+    message: string = BussinessMessage.VALIDATION_ERROR
   ) {
     super(code, message);
   }

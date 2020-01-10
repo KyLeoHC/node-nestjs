@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { isPlainObject, isNumber } from 'lodash';
-import { BussinessStatus } from '../enums';
+import {
+  isPlainObject,
+  isNumber
+} from 'lodash';
+import {
+  BussinessStatus,
+  BussinessMessage
+} from '../enums';
 
 export interface ResponseData<T> {
   data?: T;
@@ -32,7 +38,7 @@ export class ResponseDto<T = any> implements ResponseData<T> {
     } else if (isNestDefaultJSON(codeOrObj)) {
       // transform NestDefaultJSON into our format
       this.code = `${codeOrObj.statusCode}`;
-      this.message = codeOrObj.error || '未知的错误';
+      this.message = codeOrObj.error || BussinessMessage.UNKNOWN_ERROR;
     } else {
       this.code = BussinessStatus.UNKNOWN_ERROR;
       this.message = `${codeOrObj}`;

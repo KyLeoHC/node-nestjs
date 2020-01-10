@@ -1,8 +1,9 @@
 import * as helmet from 'helmet';
 // import * as csurf from 'csurf';
 import { NestFactory } from '@nestjs/core';
-import { HttpExceptionFilter } from './common/filters';
-import { TransformInterceptor } from './common/interceptors';
+import { ValidationPipe } from './common/pipes';
+import { AllExceptionsFilter } from './common/filters';
+import { TransformResponseInterceptor } from './common/interceptors';
 import { AppModule } from './app.module';
 import getConfig from '../config';
 
@@ -28,8 +29,9 @@ async function bootstrap(): Promise<void> {
   // refer to 'https://github.com/expressjs/csurf#csurf' for more options
   // app.use(csurf());
 
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new TransformResponseInterceptor());
 
   await app.listen(config.port);
 

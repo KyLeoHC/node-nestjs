@@ -3,16 +3,20 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus
 } from '@nestjs/common';
 import { ResponseDto } from '../dto';
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
   public catch(exception: HttpException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const statusCode = exception.getStatus();
-    const responseDto = exception.getResponse();
+    const isHttpException = exception instanceof HttpException;
+    const statusCode = isHttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const responseDto = isHttpException ? exception.getResponse() : exception;
 
     // transform some uncaught exception into our format
     response.status(statusCode)
