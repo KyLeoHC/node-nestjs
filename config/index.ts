@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { join } from 'path';
+import { merge } from 'lodash';
 import devConfig from './config.dev';
 import testConfig from './config.test';
 import preConfig from './config.prev';
@@ -21,7 +23,18 @@ switch (process.env.BUILD_ENV) {
 }
 
 export default (): Record<string, any> => {
-  const defaultConfig =  {
+  const defaultConfig = {
+    logger: {
+      level: 'info',
+      defaultMeta: { application: 'node-nestjs' },
+      exitOnError: false,
+      file: {
+        // refer to 'https://github.com/winstonjs/winston-daily-rotate-file#options' for more options
+        filename: 'app-%DATE%.log',
+        datePattern: 'YYYY-MM-DD',
+        dirname: join(process.cwd(), 'logs')
+      }
+    },
     port: parseInt(process.env.PORT, 10) || 3000,
     database: {
       host: process.env.DATABASE_HOST || 'www.localhost.com',
@@ -52,5 +65,5 @@ ZUNeSf0exCHgGuO0hLzdUoVxOzVGKhf+usAZq9eMJpMm/GQ=
 -----END RSA PRIVATE KEY-----`
     }
   };
-  return Object.assign(defaultConfig, config);
+  return merge(defaultConfig, config);
 };
