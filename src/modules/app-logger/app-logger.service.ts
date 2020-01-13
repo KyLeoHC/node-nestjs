@@ -33,15 +33,15 @@ export class AppLogger implements LoggerService {
         }),
         prettyPrint()
       ),
-      transports: []
+      transports: [
+        new transports.Console({
+          format: combine(colorize(), simple())
+        })
+      ]
     });
 
     if (process.env.NODE_ENV === 'production') {
       logger.add(new transports.DailyRotateFile(this.configService.get<DailyRotateFileTransportOptions>('logger.file')));
-    } else {
-      logger.add(new transports.Console({
-        format: combine(colorize(), simple())
-      }));
     }
 
     this.logger = logger;
