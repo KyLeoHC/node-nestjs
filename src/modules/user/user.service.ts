@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { hashPasswordSync } from '../utils';
+import { hashPasswordSync } from '../../utils';
 import { User } from './entities';
 
 @Injectable()

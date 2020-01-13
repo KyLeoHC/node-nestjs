@@ -7,8 +7,8 @@ import {
   UserPasswordIncorrectException
 } from 'src/common/exceptions';
 import { comparePassword } from 'src/utils';
-import { User } from 'src/user/entities';
-import { UserService } from 'src/user/user.service';
+import { User } from 'src/modules/user/entities';
+import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto';
 
 @Injectable()
