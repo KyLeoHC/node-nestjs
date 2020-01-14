@@ -1,7 +1,5 @@
 export enum BussinessStatus {
   OK = '200',
   UNKNOWN_ERROR = '1000',
-  VALIDATION_ERROR = '1001',
-  USER_NOT_FOUND = '1400',
-  USER_PASSEORD_INCORRECT = '1401'
+  NORMAL_BUSINESS_ERROR = '1001'
 }

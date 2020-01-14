@@ -6,7 +6,7 @@ import { BusinessException } from './business.exception';
 
 export class UserNotFoundException extends BusinessException {
   constructor(
-    code = BussinessStatus.USER_NOT_FOUND,
+    code = BussinessStatus.NORMAL_BUSINESS_ERROR,
     message = BussinessMessage.USER_NOT_FOUND
   ) {
     super(code, message);

@@ -6,8 +6,8 @@ import {
   UserNotFoundException,
   UserPasswordIncorrectException
 } from 'src/common/exceptions';
-import { comparePassword } from 'src/utils';
-import { User } from 'src/modules/user/entities';
+import { comparePassword, objectIdToString } from 'src/utils';
+import { UserEntity } from 'src/modules/user/entities';
 import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto';
 
@@ -23,8 +23,8 @@ export class AuthService {
    * retrieve a user and verify the password
    * @param {LoginUserDto} user
    */
-  public async validateUser(user: LoginUserDto): Promise<User> {
-    const targetUser = await this.userService.findUser(user.username);
+  public async validateUser(user: LoginUserDto): Promise<UserEntity> {
+    const targetUser = (await this.userService.findUser(user.username))[0];
     if (!targetUser) {
       throw new UserNotFoundException();
     }
@@ -40,7 +40,7 @@ export class AuthService {
    */
   public async login(user: LoginUserDto): Promise<{ token: string }> {
     const targetUser = await this.validateUser(user);
-    const payload = { username: targetUser.username, sub: targetUser.userId };
+    const payload = { username: targetUser.username, sub: objectIdToString(targetUser.id) };
     return {
       token: this.jwtService.sign(payload),
     };

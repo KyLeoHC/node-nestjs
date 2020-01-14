@@ -25,6 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // We can inject other business logic into here.
     // For example, we could do a database lookup in our validate() method to extract more information about the user,
     // resulting in a more enriched user object being available in our Request.
-    return { userId: payload.sub, username: payload.username };
+    return { id: payload.sub, username: payload.username };
   }
 }
