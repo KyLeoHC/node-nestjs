@@ -43,7 +43,7 @@
     "winston-daily-rotate-file": "^4.4.1"
   },
   "devDependencies": {
-    "@nestjs/cli": "^6.13.3",
+    "@nestjs/cli": "^6.14.0",
     "@nestjs/schematics": "^6.8.2",
     "@nestjs/testing": "^6.10.14",
     "@types/bcrypt": "^3.0.0",
@@ -53,8 +53,8 @@
     "@types/node": "^13.1.6",
     "@types/passport-jwt": "^3.0.3",
     "@types/supertest": "^2.0.8",
-    "@typescript-eslint/eslint-plugin": "^2.15.0",
-    "@typescript-eslint/parser": "^2.15.0",
+    "@typescript-eslint/eslint-plugin": "^2.16.0",
+    "@typescript-eslint/parser": "^2.16.0",
     "eslint": "^6.8.0",
     "husky": "^4.0.7",
     "jest": "^24.9.0",
@@ -63,7 +63,7 @@
     "supertest": "^4.0.2",
     "ts-jest": "^24.3.0",
     "ts-loader": "^6.2.1",
-    "ts-node": "^8.6.1",
+    "ts-node": "^8.6.2",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^3.7.4"
   },
