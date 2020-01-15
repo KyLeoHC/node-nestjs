@@ -15,8 +15,9 @@ async function bootstrap(): Promise<void> {
     logger: false,
     cors: {
       // Refer to 'https://github.com/expressjs/cors#configuration-options' for more options.
+      origin: true,
       credentials: true,
-      allowedHeaders: []
+      allowedHeaders: ['Authorization', 'Content-Type']
     }
   });
   const configService = app.get<ConfigService>(ConfigService);
