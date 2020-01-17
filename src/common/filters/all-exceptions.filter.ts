@@ -23,7 +23,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let responseDto: any = exception;
 
     if (exception instanceof HttpException) {
-      statusCode = exception.getStatus();
+      statusCode = HttpStatus.OK;
       responseDto = exception.getResponse();
     } else if (exception instanceof Error) {
       this.appLogger.error(exception.stack || exception.toString());
