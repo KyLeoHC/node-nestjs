@@ -1,8 +1,8 @@
 import {
   BussinessStatus,
   BussinessMessage
-} from '../enums';
-import { BusinessException } from './business.exception';
+} from '../../enums';
+import { BusinessException } from '../business.exception';
 
 export class UserExistException extends BusinessException {
   constructor(

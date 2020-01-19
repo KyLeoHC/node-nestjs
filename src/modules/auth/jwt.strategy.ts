@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload, JwtUser } from './interfaces';
+import { JwtPayload, AuthUser } from './interfaces';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * It then invokes our validate() method passing the decoded JSON as its single parameter.
    * @param {JwtPayload} payload - JWT payload
    */
-  public async validate(payload: JwtPayload): Promise<JwtUser> {
+  public async validate(payload: JwtPayload): Promise<AuthUser> {
     // We can inject other business logic into here.
     // For example, we could do a database lookup in our validate() method to extract more information about the user,
     // resulting in a more enriched user object being available in our Request.

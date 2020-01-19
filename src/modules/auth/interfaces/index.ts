@@ -1,2 +1,2 @@
 export * from './jwt-payload.interface';
-export * from './jwt-user.interface';
+export * from './auth-user.interface';

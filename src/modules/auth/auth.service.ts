@@ -24,7 +24,7 @@ export class AuthService {
    * @param {LoginUserDto} user
    */
   public async validateUser(user: LoginUserDto): Promise<UserEntity> {
-    const targetUser = (await this.userService.findUser(user.username))[0];
+    const targetUser = (await this.userService.findUsersByUsername(user.username))[0];
     if (!targetUser) {
       throw new UserNotFoundException();
     }

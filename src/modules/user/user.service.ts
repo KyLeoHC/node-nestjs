@@ -8,15 +8,20 @@ import {
   ObjectLiteral
 } from 'typeorm';
 import { UserExistException } from 'src/common/exceptions';
-import { hashPassword } from 'src/utils';
+import {
+  hashPassword,
+  objectIdToString
+} from 'src/utils';
 import { UserEntity } from './entities';
 import { CreateUserDto } from './dto';
+import { FileService } from '../file/file.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>
+    private readonly userRepo: Repository<UserEntity>,
+    private readonly fileService: FileService
   ) {
   }
 
@@ -27,7 +32,7 @@ export class UserService {
   public async countUserByUsername(username: string): Promise<number> {
     // Refer to this issue:
     // 'https://github.com/typeorm/typeorm/issues/2446'
-    return await this.userRepository.count({
+    return await this.userRepo.count({
       username: { $eq: username }
     } as ObjectLiteral);
   }
@@ -43,7 +48,10 @@ export class UserService {
     const newUser = new UserEntity();
     newUser.username = createUserDto.username;
     newUser.password = await hashPassword(createUserDto.password);
-    this.userRepository.save(newUser);
+    // At first, we create a new user data
+    await this.userRepo.save(newUser);
+    // Then, we create a new disk data that associated with the new user
+    await this.fileService.createUserDisk(objectIdToString(newUser.id));
   }
 
   /**
@@ -51,7 +59,7 @@ export class UserService {
    * @param {string} username - user name
    */
   public async findUserById(id: string): Promise<UserEntity | undefined> {
-    return await this.userRepository.findOne({
+    return await this.userRepo.findOne({
       where: {
         _id: { $eq: ObjectID(id) }
       }
@@ -59,11 +67,11 @@ export class UserService {
   }
 
   /**
-   * fine user data
+   * fine users data by username
    * @param {string} username - user name
    */
-  public async findUser(username: string): Promise<UserEntity[] | undefined> {
-    return await this.userRepository.find({
+  public async findUsersByUsername(username: string): Promise<UserEntity[]> {
+    return await this.userRepo.find({
       where: {
         username: { $eq: username }
       }

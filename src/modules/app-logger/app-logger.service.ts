@@ -22,7 +22,7 @@ export class AppLogger implements LoggerService {
       timestamp,
       prettyPrint
     } = format;
-    // refer to 'https://github.com/winstonjs/winston' for more options
+    // Refer to 'https://github.com/winstonjs/winston' for more options
     const logger = createLogger({
       level: this.configService.get<string>('logger.level'),
       defaultMeta: this.configService.get<Record<string, string>>('logger.defaultMeta'),

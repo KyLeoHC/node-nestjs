@@ -8,11 +8,14 @@ import {
 } from '@nestjs/common';
 import { AppLogger } from '../../modules/app-logger/app-logger.service';
 import { ResponseDto } from '../dto';
+import { SystemErrorException } from '../exceptions';
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(
-    private readonly appLogger: AppLogger
+    private readonly appLogger?: AppLogger
   ) {
   }
 
@@ -26,7 +29,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode = HttpStatus.OK;
       responseDto = exception.getResponse();
     } else if (exception instanceof Error) {
-      this.appLogger.error(exception.stack || exception.toString());
+      this.appLogger && this.appLogger.error(exception.stack || exception.toString());
+      isDev && console.error(exception);
+      responseDto = new SystemErrorException().getResponse();
     }
 
     // transform some uncaught exception into our format

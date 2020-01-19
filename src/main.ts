@@ -7,12 +7,14 @@ import { TransformResponseInterceptor } from './common/interceptors';
 import { AppLogger } from './modules/app-logger/app-logger.service';
 import { AppModule } from './app.module';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const module: any;
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
-    logger: false,
+    logger: isDev ? undefined : false,
     cors: {
       // Refer to 'https://github.com/expressjs/cors#configuration-options' for more options.
       origin: true,
@@ -21,9 +23,12 @@ async function bootstrap(): Promise<void> {
     }
   });
   const configService = app.get<ConfigService>(ConfigService);
-  const appLogger = new AppLogger(configService);
 
-  app.useLogger(appLogger);
+  let appLogger: AppLogger | undefined = undefined;
+  if (!isDev) {
+    appLogger = new AppLogger(configService);
+    app.useLogger(appLogger);
+  }
 
   // Helmet can help protect your app from some well-known web vulnerabilities by setting HTTP headers appropriately.
   // Refer to 'https://github.com/helmetjs/helmet' for more options.
@@ -39,7 +44,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new AllExceptionsFilter(appLogger));
   app.useGlobalInterceptors(new TransformResponseInterceptor());
 
-  await app.listen(configService.get<number>('port'));
+  await app.listen(configService.get<number>('port') || 3000);
 
   // for webpack hmr
   if (module.hot) {
@@ -49,3 +54,5 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap();
+
+export default bootstrap;

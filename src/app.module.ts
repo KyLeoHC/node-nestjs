@@ -8,7 +8,7 @@ import { AppService } from './app.service';
 import { AppLoggerModule } from './modules/app-logger/app-logger.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import { UserEntity } from './modules/user/entities';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
@@ -21,13 +21,14 @@ import { UserEntity } from './modules/user/entities';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService): Promise<Record<string, any>> => {
         return Object.assign(configService.get<Record<string, any>>('db'), {
-          entities: [UserEntity]
+          entities: [`${__dirname}/**/*.entity.{js,ts}`]
         });
       }
     }),
     AppLoggerModule,
     AuthModule,
-    UserModule
+    UserModule,
+    FileModule
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -4,12 +4,12 @@ import {
   Post,
   Body,
   UseGuards,
-  Request,
   UseInterceptors,
   ClassSerializerInterceptor
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtUser } from '../auth/interfaces';
+import { User } from '../auth/decorators';
+import { AuthUser } from '../auth/interfaces';
 import { UserService } from './user.service';
 import { UserEntity } from './entities';
 import { CreateUserDto } from './dto';
@@ -24,8 +24,8 @@ export class UserController {
   @UseGuards(AuthGuard())
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('profile')
-  public async getUserInfo(@Request() req): Promise<UserEntity> {
-    return await this.userService.findUserById((req.user as JwtUser).id);
+  public async getUserInfo(@User() user: AuthUser): Promise<UserEntity | undefined> {
+    return await this.userService.findUserById(user.id);
   }
 
   @Post('register')
