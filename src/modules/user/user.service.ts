@@ -4,7 +4,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectID } from 'mongodb';
 import {
-  Repository,
+  MongoRepository,
   ObjectLiteral
 } from 'typeorm';
 import { UserExistException } from 'src/common/exceptions';
@@ -20,7 +20,7 @@ import { FileService } from '../file/file.service';
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
+    private readonly userRepo: MongoRepository<UserEntity>,
     private readonly fileService: FileService
   ) {
   }
@@ -30,11 +30,9 @@ export class UserService {
    * @param username
    */
   public async countUserByUsername(username: string): Promise<number> {
-    // Refer to this issue:
-    // 'https://github.com/typeorm/typeorm/issues/2446'
     return await this.userRepo.count({
       username: { $eq: username }
-    } as ObjectLiteral);
+    });
   }
 
   /**

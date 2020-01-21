@@ -11,6 +11,10 @@ import {
 import { objectIdToString } from 'src/utils';
 
 export class FileSegment {
+  @Exclude()
+  @Column()
+  public serverFilename: string;
+
   @Column()
   public hash = '';
 
@@ -21,10 +25,12 @@ export class FileSegment {
   public completeTime = 0;
 }
 
+export const FILE_ENTITY_TABLE = 't_file';
+
 /**
  * file entity
  */
-@Entity('t_file')
+@Entity(FILE_ENTITY_TABLE)
 export class FileEntity extends FileSegment {
   @Transform(id => objectIdToString(id))
   @ObjectIdColumn()
@@ -35,7 +41,7 @@ export class FileEntity extends FileSegment {
 
   @Exclude()
   @Column()
-  public serverFilename: string;
+  public segmentDir = '';
 
   @Column()
   public segments: FileSegment[] = [];
@@ -44,5 +50,5 @@ export class FileEntity extends FileSegment {
    * file create time
    */
   @Column()
-  public createTime: number;
+  public createTime = new Date().getTime();
 }

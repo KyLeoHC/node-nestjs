@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 @Entity('t_disk')
-export class DiskEntity {
+export class DiskEntity<T = string> {
   @ObjectIdColumn()
   public id: ObjectID;
 
@@ -23,5 +23,5 @@ export class DiskEntity {
    * file list
    */
   @Column()
-  public files: string[] = [];
+  public files: T[] = [];
 }

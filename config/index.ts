@@ -80,8 +80,12 @@ ZUNeSf0exCHgGuO0hLzdUoVxOzVGKhf+usAZq9eMJpMm/GQ=
       }
     },
     uploadOption: {
-      segmentDir: `${projectPath}/upload/segments`,
-      fileDir: `${projectPath}/upload/files`
+      limits: {
+        // Refer to 'https://github.com/expressjs/multer#limits' for more options
+        fileSize: 6 * 1024 * 1024
+      },
+      segmentDir: join(projectPath, 'upload', 'segments'),
+      fileDir: join(projectPath, 'upload', 'files')
     }
   };
   return merge(defaultConfig, config);

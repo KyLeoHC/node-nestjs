@@ -5,7 +5,8 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
-  Body
+  Body,
+  ClassSerializerInterceptor
 } from '@nestjs/common';
 import {
   FileInterceptor
@@ -16,7 +17,9 @@ import { AuthUser } from '../auth/interfaces';
 import { FileService } from './file.service';
 import {
   CreateFileDto,
-  UploadFileDto
+  UploadFileDto,
+  MergeFileDto,
+  UserFilesDto
 } from './dto';
 
 @UseGuards(AuthGuard())
@@ -50,10 +53,21 @@ export class FileController {
     await this.fileService.saveFileOrSegmentData(user.id, uploadFileDto, file);
   }
 
+  @Post('merge')
+  public async mergeSegment(
+    /* eslint-disable */
+    @User() user: AuthUser,
+    @Body() mergeFileDto: MergeFileDto,
+    /* eslint-enable */
+  ): Promise<void> {
+    await this.fileService.mergeSegment(user.id, mergeFileDto);
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get('list')
   public async getUserFileList(
     @User() user: AuthUser
-  ): Promise<string[]> {
+  ): Promise<UserFilesDto> {
     return await this.fileService.getUserFiles(user.id);
   }
 }

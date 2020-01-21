@@ -15,5 +15,5 @@ export class CreateFileDto {
 
   @IsNotEmpty()
   @IsNumber()
-  public segmentsCount: number;
+  public segmentCount: number;
 }

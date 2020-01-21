@@ -9,7 +9,7 @@ module.exports = function(options) {
     externals: [
       nodeExternals({
         whitelist: ['webpack/hot/poll?100'],
-      }),
+      })
     ],
     plugins: [
       ...options.plugins,

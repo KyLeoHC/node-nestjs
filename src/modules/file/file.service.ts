@@ -1,4 +1,8 @@
-import { promises as fsPromises } from 'fs';
+import {
+  constants,
+  promises as fsPromises
+} from 'fs';
+import { join } from 'path';
 import {
   Injectable
 } from '@nestjs/common';
@@ -8,59 +12,158 @@ import {
 import { ObjectID } from 'mongodb';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  Repository
+  MongoRepository
 } from 'typeorm';
 import {
+  move,
+  deleteFileOrDirectory,
+  objectIdToString
+} from 'src/utils';
+import {
   DiskNotFoundException,
-  FileNotFoundException
+  FileNotFoundException,
+  MissingFileDataException,
+  SegmentNotFoundException,
+  DuplicateSegmentIndexException
 } from 'src/common/exceptions';
 import {
+  FILE_ENTITY_TABLE,
   DiskEntity,
   FileEntity,
   FileSegment
 } from './entities';
 import {
   CreateFileDto,
-  UploadFileDto
+  UploadFileDto,
+  MergeFileDto,
+  UserFilesDto
 } from './dto';
-import { objectIdToString } from 'src/utils';
+
+async function writeFile(path: string, buffer: ArrayBuffer): ReturnType<typeof fsPromises.writeFile> {
+  return await fsPromises.writeFile(path, buffer);
+}
+
+function generateUniqueServerFilename(
+  userId: string,
+  hash: string,
+  filename: string
+): string {
+  // server file name: '{userId}-{hash}-{1579419935235}-{filename}'
+  return `${userId}-{${hash}}-{${new Date().getTime()}}-${filename}`;
+}
+
+function generateUniqueSegmentDirName(
+  userId: string,
+  fileEntity: FileEntity
+): string {
+  // segment directory: '{userId}-{hash}-{1579419935235}'
+  return `${userId}-{${fileEntity.hash}}-{${fileEntity.createTime}}`;
+}
+
+function generateUniqueSegmentFileName(
+  hash: string,
+  index: number
+): string {
+  // server file name: '{0}-{hash}-{1579419935235}.part'
+  return `{${index}}-{${hash}}-{${new Date().getTime()}}.part`;
+}
 
 @Injectable()
 export class FileService {
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(DiskEntity)
-    private readonly diskRepo: Repository<DiskEntity>,
+    private readonly diskRepo: MongoRepository<DiskEntity>,
     @InjectRepository(FileEntity)
-    private readonly fileRepo: Repository<FileEntity>
+    private readonly fileRepo: MongoRepository<FileEntity>
   ) {
   }
 
   /**
-   * generate unique server filename
-   * @param userId
-   * @param hash
-   * @param filename
+   * check if all segment has bean uploaded
+   * @param fileEntity
    */
-  public generateUniqueServerFilename(
-    userId: string,
-    hash: string,
-    filename: string
-  ): string {
-    return `${userId}-${hash}-${new Date().getTime()}-${filename}`;
+  public checkIfAllSegmentComplete(fileEntity: FileEntity): boolean {
+    return !fileEntity.segments.length
+      || fileEntity.segments.every((segment): boolean => segment.completeTime > 0);
   }
 
   /**
    * get user files
    * @param userId
    */
-  public async getUserFiles(userId: string): Promise<string[]> {
-    const disk = await this.diskRepo.findOne({
-      where: {
-        userId: { $eq: userId }
+  public async getUserFiles(userId: string): Promise<UserFilesDto> {
+    const data = await this.diskRepo.aggregate<UserFilesDto>([
+      {
+        $match: { userId }
+      },
+      { $unwind: '$files' },
+      {
+        $project: {
+          usedSpace: 1,
+          fileId: {
+            '$toObjectId': '$files'
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: FILE_ENTITY_TABLE,
+          let: { fileId: '$fileId' },
+          pipeline: [
+            {
+              $match: {
+                $expr:
+                {
+                  $and:
+                    [
+                      { $eq: ['$_id', '$$fileId'] }
+                    ]
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                id: '$_id',
+                size: 1,
+                filename: 1,
+                createTime: 1
+              }
+            }
+          ],
+          as: 'files'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          usedSpace: {
+            '$first': '$usedSpace'
+          },
+          files: {
+            '$push': '$files'
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          usedSpace: 1,
+          count: {
+            $size: '$files'
+          },
+          files: {
+            $reduce: {
+              input: '$files',
+              initialValue: [],
+              in: { $concatArrays: ['$$value', '$$this'] }
+            }
+          }
+        }
       }
-    });
-    return disk ? (disk.files || []) : [];
+    ]).toArray();
+    return data[0];
   }
 
   /**
@@ -107,6 +210,23 @@ export class FileService {
   }
 
   /**
+   * find complete file by id
+   * @param id
+   */
+  public async findCompleteFileById(id: string): Promise<FileEntity> {
+    const file = await this.fileRepo.findOne({
+      where: {
+        _id: { $eq: ObjectID(id) },
+        completeTime: { $gt: 0 }
+      }
+    });
+    if (!file) {
+      throw new FileNotFoundException();
+    }
+    return file;
+  }
+
+  /**
    * find file by hash value
    * @param hash
    */
@@ -120,6 +240,33 @@ export class FileService {
   }
 
   /**
+   * save file on disk repo
+   * @param userId
+   * @param fileEntity
+   */
+  public async saveFileOnDiskRepo(
+    userId: string,
+    fileEntity: FileEntity
+  ): Promise<void> {
+    const diskEntity = await this.findUserDisk(userId);
+    diskEntity.files.push(objectIdToString(fileEntity.id));
+    await this.diskRepo.update(objectIdToString(diskEntity.id), {
+      usedSpace: diskEntity.usedSpace + fileEntity.size,
+      files: diskEntity.files
+    });
+  }
+
+  /**
+   * get absolute upload path
+   * @param key
+   * @param name
+   */
+  public getAbsoluteUploadPath(key: string, name: string): string {
+    const uploadOption = this.configService.get<Record<string, string>>('uploadOption') || {};
+    return join(`${key === 'fileDir' ? uploadOption.fileDir : uploadOption.segmentDir}`, name);
+  }
+
+  /**
    * create file before upload
    */
   public async createFile(
@@ -129,20 +276,16 @@ export class FileService {
     const existCompleteFile = await this.findCompleteFileByHash(createFileDto.hash);
     let fileId = '';
     if (existCompleteFile) {
-      fileId = objectIdToString(existCompleteFile.id);
+      // associate file with user disk repository
+      await this.saveFileOnDiskRepo(userId, existCompleteFile);
     } else {
       // File not exist
       const newFile = new FileEntity();
       newFile.hash = createFileDto.hash;
       newFile.filename = createFileDto.filename;
-      newFile.createTime = new Date().getTime();
-      newFile.segments = (new Array(createFileDto.segmentsCount)).map<FileSegment>(
-        (): FileSegment => ({
-          hash: '',
-          size: 0,
-          completeTime: 0
-        })
-      );
+      for (let i = 0; i < createFileDto.segmentCount; i++) {
+        newFile.segments.push(new FileSegment());
+      }
       await this.fileRepo.save(newFile);
       fileId = objectIdToString(newFile.id);
     }
@@ -150,19 +293,23 @@ export class FileService {
   }
 
   /**
-   * save file on disk repo
+   * complete upload task
    * @param userId
-   * @param fileId
+   * @param fileEntity
    */
-  public async saveFileOnDiskRepo(
+  public async completeUploadFile(
     userId: string,
-    fileId: string
+    fileEntity: FileEntity
   ): Promise<void> {
-    const diskEntity = await this.findUserDisk(userId);
-    diskEntity.files.push(fileId);
-    await this.diskRepo.update(objectIdToString(diskEntity.id), {
-      files: diskEntity.files
+    const fileId = objectIdToString(fileEntity.id);
+    await this.fileRepo.update(fileId, {
+      size: fileEntity.size,
+      serverFilename: fileEntity.serverFilename,
+      completeTime: new Date().getTime(),
+      segments: []
     });
+    // associate file with user disk repository
+    await this.saveFileOnDiskRepo(userId, fileEntity);
   }
 
   /**
@@ -172,23 +319,91 @@ export class FileService {
   public async saveFileOrSegmentData(
     userId: string,
     uploadFileDto: UploadFileDto,
-    file: Express.Multer.File
+    file?: Express.Multer.File
   ): Promise<void> {
-    const uploadOption = this.configService.get<Record<string, string>>('uploadOption') || {};
+    if (!file) throw new MissingFileDataException();
     const fileEntity = await this.findUncompleteFileById(uploadFileDto.id);
     const fileId = objectIdToString(fileEntity.id);
     const segmentIndex = parseInt(uploadFileDto.index);
     if (!fileEntity.segments.length) {
-      fileEntity.serverFilename = this.generateUniqueServerFilename(userId, fileEntity.hash, fileEntity.filename);
-      await fsPromises.writeFile(`${uploadOption.fileDir}/${fileEntity.serverFilename}`, file.buffer);
-      // no segment split
+      // no segment, just save this file directly
+      fileEntity.serverFilename = generateUniqueServerFilename(userId, fileEntity.hash, fileEntity.filename);
+      // write file into local disk
+      await writeFile(this.getAbsoluteUploadPath('fileDir', fileEntity.serverFilename), file.buffer);
+      // no segment split, just finish this task
+      fileEntity.size = file.size;
+      fileEntity.completeTime = new Date().getTime();
+      this.completeUploadFile(userId, fileEntity);
+    } else {
+      // save segment
+      const segment = fileEntity.segments[segmentIndex];
+      if (!segment) {
+        throw new SegmentNotFoundException();
+      }
+      if (segment.completeTime) {
+        throw new DuplicateSegmentIndexException();
+      }
+      // This data is a segment file data
+      const segmentFileDirName = fileEntity.segmentDir || generateUniqueSegmentDirName(userId, fileEntity);
+      const segmentDirPath = this.getAbsoluteUploadPath('segmentDir', segmentFileDirName);
+      try {
+        // Check if segment directory exists
+        await fsPromises.access(segmentDirPath, constants.F_OK);
+      } catch (ex) {
+        // Create segment directory if not exist
+        await fsPromises.mkdir(segmentDirPath, { recursive: true });
+      }
+      segment.hash = uploadFileDto.hash;
+      segment.size = file.size;
+      segment.completeTime = new Date().getTime();
+      segment.serverFilename = generateUniqueSegmentFileName(uploadFileDto.hash, segmentIndex);
+      // write segment file into local disk
+      await writeFile(
+        `${segmentDirPath}/${segment.serverFilename}`,
+        file.buffer
+      );
+      // update target segment data in mongoDB
       await this.fileRepo.update(fileId, {
-        size: file.size,
-        serverFilename: fileEntity.serverFilename,
-        completeTime: new Date().getTime()
+        [`segments.${segmentIndex}`]: segment
       });
     }
-    // associate file with user disk repository
-    await this.saveFileOnDiskRepo(userId, fileId);
+  }
+
+  /**
+   * merge segment
+   * @param userId
+   * @param mergeFileDto
+   */
+  public async mergeSegment(
+    userId: string,
+    mergeFileDto: MergeFileDto
+  ): Promise<void> {
+    const fileEntity = await this.findUncompleteFileById(mergeFileDto.id);
+    if (fileEntity.completeTime
+      || !fileEntity.segments.length
+      || !this.checkIfAllSegmentComplete(fileEntity)) return;
+    const segmentFileDirName = generateUniqueSegmentDirName(userId, fileEntity);
+    const segmentDirPath = this.getAbsoluteUploadPath('segmentDir', segmentFileDirName);
+    const firstSegment = fileEntity.segments.shift();
+    if (firstSegment) {
+      const firstSegmentPath = `${segmentDirPath}/${firstSegment.serverFilename}`;
+      // start merge file
+      for (const segment of fileEntity.segments) {
+        await fsPromises.appendFile(
+          firstSegmentPath,
+          await fsPromises.readFile(`${segmentDirPath}/${segment.serverFilename}`)
+        );
+      }
+      const fileStats = await fsPromises.stat(firstSegmentPath);
+      fileEntity.size = fileStats.size;
+      fileEntity.completeTime = new Date().getTime();
+      fileEntity.serverFilename = generateUniqueServerFilename(userId, fileEntity.hash, fileEntity.filename);
+      // move file into the files directory
+      await move(firstSegmentPath, this.getAbsoluteUploadPath('fileDir', fileEntity.serverFilename));
+      // complete upload task
+      this.completeUploadFile(userId, fileEntity);
+      // delete segment directory
+      deleteFileOrDirectory(segmentDirPath);
+    }
   }
 }
