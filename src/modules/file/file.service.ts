@@ -107,6 +107,11 @@ export class FileService {
         }
       },
       {
+        $sort: {
+          fileId: -1
+        }
+      },
+      {
         $lookup: {
           from: FILE_ENTITY_TABLE,
           let: { fileId: '$fileId' },
@@ -115,10 +120,7 @@ export class FileService {
               $match: {
                 $expr:
                 {
-                  $and:
-                    [
-                      { $eq: ['$_id', '$$fileId'] }
-                    ]
+                  $and: [{ $eq: ['$_id', '$$fileId'] }]
                 }
               }
             },
@@ -273,14 +275,17 @@ export class FileService {
     userId: string,
     createFileDto: CreateFileDto
   ): Promise<string> {
+    const newFile = new FileEntity();
     const existCompleteFile = await this.findCompleteFileByHash(createFileDto.hash);
     let fileId = '';
     if (existCompleteFile) {
+      newFile.hash = existCompleteFile.hash;
+      newFile.filename = createFileDto.filename;
+      await this.fileRepo.save(newFile);
       // associate file with user disk repository
-      await this.saveFileOnDiskRepo(userId, existCompleteFile);
+      await this.saveFileOnDiskRepo(userId, newFile);
     } else {
       // File not exist
-      const newFile = new FileEntity();
       newFile.hash = createFileDto.hash;
       newFile.filename = createFileDto.filename;
       for (let i = 0; i < createFileDto.segmentCount; i++) {
