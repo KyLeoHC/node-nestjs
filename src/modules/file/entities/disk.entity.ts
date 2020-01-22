@@ -1,15 +1,11 @@
 import {
   Entity,
-  Column,
-  ObjectID,
-  ObjectIdColumn
+  Column
 } from 'typeorm';
+import { BaseEntity } from 'src/common/entities';
 
 @Entity('t_disk')
-export class DiskEntity<T = string> {
-  @ObjectIdColumn()
-  public id: ObjectID;
-
+export class DiskEntity<T = string> extends BaseEntity {
   @Column()
   public userId: string;
 

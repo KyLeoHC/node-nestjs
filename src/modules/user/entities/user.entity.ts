@@ -1,21 +1,14 @@
 import {
   Entity,
-  ObjectID,
-  ObjectIdColumn,
   Column
 } from 'typeorm';
 import {
-  Exclude,
-  Transform
+  Exclude
 } from 'class-transformer';
-import { objectIdToString } from 'src/utils';
+import { BaseEntity } from 'src/common/entities';
 
 @Entity('t_user')
-export class UserEntity {
-  @Transform(id => objectIdToString(id))
-  @ObjectIdColumn()
-  public id: ObjectID;
-
+export class UserEntity extends BaseEntity {
   @Column()
   public username: string;
 

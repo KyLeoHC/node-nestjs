@@ -3,7 +3,7 @@ import {
   IsNotEmpty
 } from 'class-validator';
 
-export class MergeFileDto {
+export class TargetFileDto {
   @IsNotEmpty()
   @IsString()
   public id: string;

@@ -1,16 +1,13 @@
 import {
   Entity,
   Column,
-  ObjectID,
-  ObjectIdColumn,
 } from 'typeorm';
 import {
-  Transform,
   Exclude
 } from 'class-transformer';
-import { objectIdToString } from 'src/utils';
+import { BaseEntity } from 'src/common/entities';
 
-export class FileSegment {
+export class FileSegment extends BaseEntity {
   @Exclude()
   @Column()
   public serverFilename: string;
@@ -32,10 +29,6 @@ export const FILE_ENTITY_TABLE = 't_file';
  */
 @Entity(FILE_ENTITY_TABLE)
 export class FileEntity extends FileSegment {
-  @Transform(id => objectIdToString(id))
-  @ObjectIdColumn()
-  public id: ObjectID;
-
   @Column()
   public filename: string;
 

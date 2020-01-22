@@ -1,6 +1,8 @@
 import {
   constants,
-  promises as fsPromises
+  createReadStream,
+  promises as fsPromises,
+  ReadStream
 } from 'fs';
 import { join } from 'path';
 import {
@@ -35,7 +37,6 @@ import {
 import {
   CreateFileDto,
   UploadFileDto,
-  MergeFileDto,
   UserFilesDto
 } from './dto';
 
@@ -279,6 +280,7 @@ export class FileService {
     const existCompleteFile = await this.findCompleteFileByHash(createFileDto.hash);
     let fileId = '';
     if (existCompleteFile) {
+      newFile.size = existCompleteFile.size;
       newFile.hash = existCompleteFile.hash;
       newFile.filename = createFileDto.filename;
       await this.fileRepo.save(newFile);
@@ -294,6 +296,7 @@ export class FileService {
       await this.fileRepo.save(newFile);
       fileId = objectIdToString(newFile.id);
     }
+    // return the new file id if this is a unique file
     return fileId;
   }
 
@@ -381,9 +384,9 @@ export class FileService {
    */
   public async mergeSegment(
     userId: string,
-    mergeFileDto: MergeFileDto
+    fileId: string
   ): Promise<void> {
-    const fileEntity = await this.findUncompleteFileById(mergeFileDto.id);
+    const fileEntity = await this.findUncompleteFileById(fileId);
     if (fileEntity.completeTime
       || !fileEntity.segments.length
       || !this.checkIfAllSegmentComplete(fileEntity)) return;
@@ -410,5 +413,36 @@ export class FileService {
       // delete segment directory
       deleteFileOrDirectory(segmentDirPath);
     }
+  }
+
+  /**
+   * delete file
+   * @param fileId
+   */
+  public async deleteFileOfDisk(
+    userId: string,
+    fileId: string
+  ): Promise<void> {
+    const targetFile = await this.findCompleteFileById(fileId);
+    await this.diskRepo.updateOne({ userId }, {
+      $pull: {
+        files: { $in: [fileId] }
+      },
+      $inc: { usedSpace: -targetFile.size }
+    });
+    await this.fileRepo.deleteOne({
+      where: {
+        userId
+      }
+    });
+  }
+
+  /**
+   * download file
+   * @param fileId
+   */
+  public async loadServerFileData(serverFilename: string): Promise<ReadStream> {
+    const filePath = this.getAbsoluteUploadPath('fileDir', serverFilename);
+    return createReadStream(filePath);
   }
 }
