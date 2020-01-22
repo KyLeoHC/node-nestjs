@@ -28,6 +28,7 @@ import {
   SegmentNotFoundException,
   DuplicateSegmentIndexException
 } from 'src/common/exceptions';
+import { AppLogger } from '../../modules/app-logger/app-logger.service';
 import {
   FILE_ENTITY_TABLE,
   DiskEntity,
@@ -72,6 +73,7 @@ function generateUniqueSegmentFileName(
 @Injectable()
 export class FileService {
   constructor(
+    private readonly appLogger: AppLogger,
     private readonly configService: ConfigService,
     @InjectRepository(DiskEntity)
     private readonly diskRepo: MongoRepository<DiskEntity>,
@@ -441,8 +443,17 @@ export class FileService {
    * download file
    * @param fileId
    */
-  public async loadServerFileData(serverFilename: string): Promise<ReadStream> {
+  public async loadServerFileData(
+    serverFilename: string
+  ): Promise<ReadStream> {
     const filePath = this.getAbsoluteUploadPath('fileDir', serverFilename);
-    return createReadStream(filePath);
+    try {
+      // check if file exists
+      await fsPromises.access(filePath, constants.R_OK);
+    } catch (exception) {
+      this.appLogger.error(exception);
+      throw new FileNotFoundException();
+    }
+    return createReadStream(filePath, { autoClose: true });
   }
 }

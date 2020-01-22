@@ -8,15 +8,12 @@ import {
   UploadedFile,
   UseInterceptors,
   Body,
-  Res,
-  Header,
   Param,
   ClassSerializerInterceptor
 } from '@nestjs/common';
 import {
   FileInterceptor
 } from '@nestjs/platform-express';
-import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../auth/decorators';
 import { AuthUser } from '../auth/interfaces';
@@ -28,6 +25,7 @@ import {
   UserFilesDto
 } from './dto';
 
+@UseGuards(AuthGuard())
 @Controller('file')
 export class FileController {
   constructor(
@@ -35,7 +33,6 @@ export class FileController {
   ) {
   }
 
-  @UseGuards(AuthGuard())
   @Post('create')
   public async createFile(
     // Refer to issue 'https://github.com/typescript-eslint/typescript-eslint/issues/1356'
@@ -47,7 +44,6 @@ export class FileController {
     return await this.fileService.createFile(user.id, createFileDto);
   }
 
-  @UseGuards(AuthGuard())
   @UseInterceptors(FileInterceptor('file'))
   @Post('upload')
   public async uploadFile(
@@ -60,7 +56,6 @@ export class FileController {
     await this.fileService.saveFileOrSegmentData(user.id, uploadFileDto, file);
   }
 
-  @UseGuards(AuthGuard())
   @Put('merge')
   public async mergeSegment(
     /* eslint-disable */
@@ -71,7 +66,6 @@ export class FileController {
     await this.fileService.mergeSegment(user.id, targetFileDto.id);
   }
 
-  @UseGuards(AuthGuard())
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('list')
   public async getUserFileList(
@@ -80,7 +74,6 @@ export class FileController {
     return await this.fileService.getUserFiles(user.id);
   }
 
-  @UseGuards(AuthGuard())
   @Delete('delete/:id')
   public async deleteUserFile(
     /* eslint-disable */
@@ -89,19 +82,5 @@ export class FileController {
     /* eslint-enable */
   ): Promise<void> {
     await this.fileService.deleteFileOfDisk(user.id, targetFileDto.id);
-  }
-
-  @Get('download/:id')
-  @Header('Content-Type', 'application/octet-stream')
-  public async download(
-    /* eslint-disable */
-    @Param() targetFileDto: TargetFileDto,
-    @Res() response: Response
-    /* eslint-enable */
-  ): Promise<void> {
-    const targetFile = await this.fileService.findCompleteFileById(targetFileDto.id);
-    const stream = await this.fileService.loadServerFileData(targetFile.serverFilename);
-    response.attachment(targetFile.filename);
-    stream.pipe(response);
   }
 }

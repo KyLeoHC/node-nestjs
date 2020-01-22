@@ -8,6 +8,7 @@ import {
 } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileController } from './file.controller';
+import { DownloadController } from './download.controller';
 import { FileService } from './file.service';
 import {
   DiskEntity,
@@ -28,7 +29,7 @@ import {
       FileEntity
     ])
   ],
-  controllers: [FileController],
+  controllers: [FileController, DownloadController],
   providers: [FileService],
   exports: [FileService]
 })
