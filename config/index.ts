@@ -7,7 +7,7 @@ import preConfig from './config.prev';
 import productionConfig from './config.production';
 
 let config: Record<string, any> = {};
-switch (process.env.BUILD_ENV) {
+switch (process.env.LAUNCH_ENV) {
   case 'development':
     config = devConfig();
     break;
