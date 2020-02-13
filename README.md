@@ -133,8 +133,14 @@ On application start, collections for all entities will be created.
 │   └── main.ts: main entry
 └── test: e2e test directory
     └── app.e2e-spec.ts
-    └── jest-e2e.json 
+    └── jest-e2e.json
 ```
+
+## Frontend
+
+See [node-nestjs-frontend](https://github.com/KyLeoHC/node-nestjs-frontend).
+
+You can run `node-nestjs` and `node-nestjs-frontend` at the same time.So you can see the interaction effect.
 
 ## License
 
