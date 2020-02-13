@@ -46,7 +46,7 @@ $ npm run start:debug
 $ npm run build
 
 # launch in test environment
-$ npm run launch:prod
+$ npm run launch:test
 
 # launch in production environment
 $ npm run launch:prod
